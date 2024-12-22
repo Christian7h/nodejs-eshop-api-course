@@ -1,0 +1,7 @@
+[build]
+  functions = "functions"  # La carpeta que contiene las funciones serverless
+  public ="public"
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/index"  # Redirige todas las solicitudes a la función de índice
+  status = 200

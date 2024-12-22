@@ -1,3 +1,4 @@
+//routes/products.js
 const {Product} = require('../models/product');
 const express = require('express');
 const { Category } = require('../models/category');
@@ -46,14 +47,23 @@ router.get(`/`, async (req, res) =>{
     res.send(productList);
 })
 
-router.get(`/:id`, async (req, res) =>{
-    const product = await Product.findById(req.params.id).populate('category');
+router.get(`/:id`, async (req, res) => {
+    try {
+        // Intentamos encontrar el producto por su ID
+        const product = await Product.findById(req.params.id).populate('category');
 
-    if(!product) {
-        res.status(500).json({success: false})
-    } 
-    res.send(product);
-})
+        // Si no se encuentra el producto
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        // Si se encuentra el producto, lo enviamos en la respuesta
+        res.send(product);
+    } catch (error) {
+        // Si ocurre algún error durante la búsqueda
+        res.status(500).json({ success: false, message: 'Error retrieving product', error: error.message });
+    }
+});
 
 router.post(`/`, uploadOptions.single('image'), async (req, res) =>{
     const category = await Category.findById(req.body.category);
