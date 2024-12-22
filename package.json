@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "netlify deploy --prod",
-    "start": "nodemon functions/index.js",
+    "start": "node functions/index.js",
     "dev": "netlify dev"
   },
   "keywords": [],
