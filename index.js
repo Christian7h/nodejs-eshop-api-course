@@ -4,8 +4,8 @@ const app = express();
 const morgan = require("morgan");
 const cors = require("cors");
 require("dotenv/config");
-const authJwt = require("../helpers/jwt");
-const errorHandler = require("../helpers/error-handler");
+const authJwt = require("./helpers/jwt");
+const errorHandler = require("./helpers/error-handler");
 const serverless = require("serverless-http"); // Importamos serverless-http
 const mongoose = require('mongoose');
 
@@ -18,12 +18,11 @@ app.use(morgan('tiny'));
 app.use(authJwt());
 app.use('/public/uploads', express.static(__dirname + '/public/uploads'));
 app.use(errorHandler);
-
-//Routes
-const categoriesRoutes = require('../routes/categories');
-const productsRoutes = require('../routes/products');
-const usersRoutes = require('../routes/users');
-const ordersRoutes = require('../routes/orders');
+//Routes    
+const categoriesRoutes = require('./routes/categories');
+const productsRoutes = require('./routes/products');
+const usersRoutes = require('./routes/users');
+const ordersRoutes = require('./routes/orders');
 
 const api = process.env.API_URL;
 
@@ -50,4 +49,4 @@ app.listen(3000, ()=>{
     console.log('server is running http://localhost:3000');
 })
 
-module.exports.handler = serverless(app);
+// module.exports.handler = serverless(app); // Exportamos app como handler
