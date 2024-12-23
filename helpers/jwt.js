@@ -1,4 +1,4 @@
-//herlpers/jwt.js
+//herl
 const expressJwt = require('express-jwt');
 
 function authJwt() {
@@ -11,7 +11,7 @@ function authJwt() {
     }).unless({
         path: [
             {url: /\/public\/uploads(.*)/ , methods: ['GET', 'OPTIONS'] },
-            {url: /\/api\/v1\/products(.*)/ , methods: ['GET', 'OPTIONS'] },
+            {url: /\/api\/v1\/products(.*)/ , methods: ['GET', 'OPTIONS','DELETE'] },
             {url: /\/api\/v1\/categories(.*)/ , methods: ['GET', 'OPTIONS'] },
             {url: /\/api\/v1\/orders(.*)/,methods: ['GET', 'OPTIONS', 'POST']},
             `${api}/users/login`,
