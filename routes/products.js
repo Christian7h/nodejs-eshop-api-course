@@ -1,35 +1,41 @@
-const {Product} = require('../models/product');
+const { Product } = require('../models/product');
 const express = require('express');
 const { Category } = require('../models/category');
 const router = express.Router();
 const mongoose = require('mongoose');
 const multer = require('multer');
+const cloudinary = require('../cloudinary'); // Asegúrate de importar correctamente la configuración de Cloudinary
 
 const FILE_TYPE_MAP = {
     'image/png': 'png',
     'image/jpeg': 'jpeg',
     'image/jpg': 'jpg'
-}
+};
+
+// Aseguramos que el tipo de archivo sea válido
+const validateImageType = (file) => {
+    return FILE_TYPE_MAP[file.mimetype];
+};
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const isValid = FILE_TYPE_MAP[file.mimetype];
-        let uploadError = new Error('invalid image type');
+        const isValid = validateImageType(file);
+        let uploadError = new Error('Invalid image type');
 
-        if(isValid) {
-            uploadError = null
+        if (isValid) {
+            uploadError = null;
         }
-      cb(uploadError, 'public/uploads')
+
+        cb(uploadError, 'public/uploads'); // Guarda la imagen localmente antes de subir a Cloudinary
     },
     filename: function (req, file, cb) {
-        
-      const fileName = file.originalname.split(' ').join('-');
-      const extension = FILE_TYPE_MAP[file.mimetype];
-      cb(null, `${fileName}-${Date.now()}.${extension}`)
+        const fileName = file.originalname.split(' ').join('-');
+        const extension = FILE_TYPE_MAP[file.mimetype];
+        cb(null, `${fileName}-${Date.now()}.${extension}`); // Genera un nombre único para la imagen
     }
-  })
-  
-const uploadOptions = multer({ storage: storage })
+});
+
+const uploadOptions = multer({ storage: storage });
 
 router.get(`/`, async (req, res) =>{
     let filter = {};
@@ -55,36 +61,42 @@ router.get(`/:id`, async (req, res) =>{
     res.send(product);
 })
 
-router.post(`/`, uploadOptions.single('image'), async (req, res) =>{
+router.post(`/`, uploadOptions.single('image'), async (req, res) => {
     const category = await Category.findById(req.body.category);
-    if(!category) return res.status(400).send('Invalid Category')
+    if (!category) return res.status(400).send('Invalid Category');
 
-    const file = req.file;
-    if(!file) return res.status(400).send('No image in the request')
+    const file = req.file;  // Obtén el archivo de la solicitud
+    if (!file) return res.status(400).send('No image in the request');
 
-    const fileName = file.filename
-    const basePath = `${req.protocol}://${req.get('host')}/public/uploads/`;
-    let product = new Product({
-        name: req.body.name,
-        description: req.body.description,
-        richDescription: req.body.richDescription,
-        image: `${basePath}${fileName}`,// "http://localhost:3000/public/upload/image-2323232"
-        brand: req.body.brand,
-        price: req.body.price,
-        category: req.body.category,
-        countInStock: req.body.countInStock,
-        rating: req.body.rating,
-        numReviews: req.body.numReviews,
-        isFeatured: req.body.isFeatured,
-    })
+    // Subir la imagen a Cloudinary
+    cloudinary.uploader.upload(file.path, { folder: 'products' }, async (error, result) => {
+        if (error) {
+            return res.status(500).send('Error uploading image to Cloudinary');
+        }
 
-    product = await product.save();
+        const imageUrl = result.secure_url; // Obtén la URL segura de Cloudinary
 
-    if(!product) 
-    return res.status(500).send('The product cannot be created')
+        let product = new Product({
+            name: req.body.name,
+            description: req.body.description,
+            richDescription: req.body.richDescription,
+            image: imageUrl,  // Guarda la URL de la imagen en Cloudinary
+            brand: req.body.brand,
+            price: req.body.price,
+            category: req.body.category,
+            countInStock: req.body.countInStock,
+            rating: req.body.rating,
+            numReviews: req.body.numReviews,
+            isFeatured: req.body.isFeatured,
+        });
 
-    res.send(product);
-})
+        product = await product.save();
+
+        if (!product) return res.status(500).send('The product cannot be created');
+
+        res.send(product);
+    });
+});
 
 router.put('/:id',async (req, res)=> {
     if(!mongoose.isValidObjectId(req.params.id)) {
