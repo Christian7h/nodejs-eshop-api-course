@@ -1,3 +1,4 @@
+//routes/users.js
 const {User} = require('../models/user');
 const express = require('express');
 const router = express.Router();
@@ -103,6 +104,9 @@ router.post('/login', async (req,res) => {
 
 
 router.post('/register', async (req,res)=>{
+    const userExist =  await User.findOne({email: req.body.email});
+    if(userExist){ return res.status(400).send('The email is already registered!');
+    }
     let user = new User({
         name: req.body.name,
         email: req.body.email,
