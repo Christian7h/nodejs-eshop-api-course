@@ -1,3 +1,4 @@
+//nodels/category.js
 const mongoose = require('mongoose');
 
 const categorySchema = mongoose.Schema({
@@ -23,3 +24,4 @@ categorySchema.set('toJSON', {
 });
 
 exports.Category = mongoose.model('Category', categorySchema);
+ 

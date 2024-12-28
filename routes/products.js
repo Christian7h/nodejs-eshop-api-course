@@ -69,7 +69,12 @@ router.post(`/`, uploadOptions.single('image'), async (req, res) => {
     if (!file) return res.status(400).send('No image in the request');
 
     // Subir la imagen a Cloudinary
-    cloudinary.uploader.upload(file.path, { folder: 'products' }, async (error, result) => {
+    cloudinary.uploader.upload(file.path, {
+        folder: 'products', // Carpeta donde se almacenarán las imágenes
+        transformation: [
+            { quality: 'auto', fetch_format: 'auto', width: 800, crop: 'limit' } // Optimización
+        ]
+    }, async (error, result) => {
         if (error) {
             return res.status(500).send('Error uploading image to Cloudinary');
         }
