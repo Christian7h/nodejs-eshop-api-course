@@ -6,7 +6,22 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const cloudinary = require('../cloudinary'); // Asegúrate de importar correctamente la configuración de Cloudinary
 const buildHookUrl = "https://api.netlify.com/build_hooks/67a8d35f5c17bbf5381a1f2d";
-
+// Función debounce para el deploy
+const triggerDeploy = () => {
+    clearTimeout(buildHookTimeout);  // Cancela el timer anterior
+    buildHookTimeout = setTimeout(() => {
+      console.log("🚀 Ejecutando deploy después de 5 minutos de inactividad");
+      fetch(buildHookUrl, { method: 'POST' })
+        .then(response => {
+          if (response.ok) {
+            console.log("✅ Deploy exitoso");
+          } else {
+            console.error("❌ Falló el deploy. Código:", response.status);
+          }
+        })
+        .catch(error => console.error("🔥 Error crítico:", error));
+    }, 300000);  // 300,000 ms = 5 minutos
+  };
 const FILE_TYPE_MAP = {
     'image/png': 'png',
     'image/jpeg': 'jpeg',
@@ -97,10 +112,8 @@ router.post(`/`, uploadOptions.single('image'), async (req, res) => {
         });
 
         product = await product.save();
-
         if (!product) return res.status(500).send('The product cannot be created');
-        await fetch(buildHookUrl, { method: 'POST' });
-        
+        triggerDeploy();  // Reemplaza el await fetch(...)
         res.send(product);
     });
 });
@@ -150,7 +163,7 @@ router.put('/:id', uploadOptions.single('image'), async (req, res) => {
     if (!product) {
         return res.status(500).send('The product cannot be updated');
     }
-
+    triggerDeploy();  // Agrega esta línea
     res.send(product);
 });
 
@@ -158,6 +171,7 @@ router.put('/:id', uploadOptions.single('image'), async (req, res) => {
 router.delete('/:id', (req, res)=>{
     Product.findByIdAndDelete(req.params.id).then(product =>{
         if(product) {
+            triggerDeploy();  // Agrega aquí
             return res.status(200).json({success: true, message: 'the product is deleted!'})
         } else {
             return res.status(404).json({success: false , message: "product not found!"})
@@ -166,7 +180,6 @@ router.delete('/:id', (req, res)=>{
        return res.status(500).json({success: false, error: err}) 
     })
 })
-
 router.get(`/get/count`, async (req, res) =>{
     const productCount = await Product.countDocuments((count) => count)
 
