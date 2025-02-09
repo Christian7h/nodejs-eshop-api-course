@@ -6,22 +6,22 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const cloudinary = require('../cloudinary'); // Asegúrate de importar correctamente la configuración de Cloudinary
 const buildHookUrl = "https://api.netlify.com/build_hooks/67a8d35f5c17bbf5381a1f2d";
-// Función debounce para el deploy
+const fetch = require('node-fetch');
+let buildHookTimeout = null; // 👈 Declara aquí la variable
+
+// Función debounce
 const triggerDeploy = () => {
-    clearTimeout(buildHookTimeout);  // Cancela el timer anterior
-    buildHookTimeout = setTimeout(() => {
-      console.log("🚀 Ejecutando deploy después de 5 minutos de inactividad");
-      fetch(buildHookUrl, { method: 'POST' })
-        .then(response => {
-          if (response.ok) {
-            console.log("✅ Deploy exitoso");
-          } else {
-            console.error("❌ Falló el deploy. Código:", response.status);
-          }
-        })
-        .catch(error => console.error("🔥 Error crítico:", error));
-    }, 300000);  // 300,000 ms = 5 minutos
-  };
+  clearTimeout(buildHookTimeout); // Ahora la variable está definida
+  buildHookTimeout = setTimeout(() => {
+    fetch(buildHookUrl, { method: 'POST' })
+      .then(response => {
+        if (response.ok) {
+          console.log("✅ Deploy Netlify activado");
+        }
+      })
+      .catch(error => console.error("Error:", error));
+  }, 300000); // 5 minutos
+};
 const FILE_TYPE_MAP = {
     'image/png': 'png',
     'image/jpeg': 'jpeg',
@@ -180,6 +180,7 @@ router.delete('/:id', (req, res)=>{
        return res.status(500).json({success: false, error: err}) 
     })
 })
+
 router.get(`/get/count`, async (req, res) =>{
     const productCount = await Product.countDocuments((count) => count)
 
