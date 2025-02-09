@@ -5,6 +5,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const multer = require('multer');
 const cloudinary = require('../cloudinary'); // Asegúrate de importar correctamente la configuración de Cloudinary
+const buildHookUrl = "https://api.netlify.com/build_hooks/67a8d35f5c17bbf5381a1f2d";
 
 const FILE_TYPE_MAP = {
     'image/png': 'png',
@@ -98,6 +99,7 @@ router.post(`/`, uploadOptions.single('image'), async (req, res) => {
         product = await product.save();
 
         if (!product) return res.status(500).send('The product cannot be created');
+        await fetch(buildHookUrl, { method: 'POST' });
 
         res.send(product);
     });
