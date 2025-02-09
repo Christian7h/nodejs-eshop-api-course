@@ -100,7 +100,7 @@ router.post(`/`, uploadOptions.single('image'), async (req, res) => {
 
         if (!product) return res.status(500).send('The product cannot be created');
         await fetch(buildHookUrl, { method: 'POST' });
-
+        
         res.send(product);
     });
 });
@@ -156,7 +156,7 @@ router.put('/:id', uploadOptions.single('image'), async (req, res) => {
 
 
 router.delete('/:id', (req, res)=>{
-    Product.findByIdAndRemove(req.params.id).then(product =>{
+    Product.findByIdAndDelete(req.params.id).then(product =>{
         if(product) {
             return res.status(200).json({success: true, message: 'the product is deleted!'})
         } else {
