@@ -6,7 +6,6 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const cloudinary = require('../cloudinary'); // Asegúrate de importar correctamente la configuración de Cloudinary
 const buildHookUrl = "https://api.netlify.com/build_hooks/67a8d35f5c17bbf5381a1f2d";
-const fetch = require('node-fetch');
 let buildHookTimeout = null; // 👈 Declara aquí la variable
 
 // Función debounce
@@ -20,7 +19,7 @@ const triggerDeploy = () => {
         }
       })
       .catch(error => console.error("Error:", error));
-  }, 300000); // 5 minutos
+  }, 120000); // 5 minutos
 };
 const FILE_TYPE_MAP = {
     'image/png': 'png',
