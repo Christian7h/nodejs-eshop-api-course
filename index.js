@@ -50,28 +50,31 @@ mongoose
 
 // 📌 Función para detectar cambios en la BD
 const watchDatabaseChanges = () => {
-  const db = mongoose.connection;
-
-  db.once("open", () => {
-    console.log("🟢 Watching for database changes...");
-
-    // Escuchar cambios en todas las colecciones
-    const changeStream = db.watch();
-
-    changeStream.on("change", async (change) => {
-      console.log("🔄 Cambio detectado en la BD:", change);
-
-      // Llamamos al Build Hook de Netlify
-      try {
-        console.log("🚀 Activando Netlify Build Hook...");
-        await fetch(buildHookUrl, { method: "POST" });
-        console.log("✅ Netlify Build Hook activado.");
-      } catch (error) {
-        console.error("❌ Error al activar el Build Hook:", error);
-      }
+    const db = mongoose.connection;
+  
+    db.once("open", () => {
+      console.log("🟢 Watching for database changes...");
+  
+      const changeStream = db.watch();
+  
+      changeStream.on("change", async (change) => {
+        console.log("🔄 Cambio detectado en la BD:", change);
+  
+        try {
+          console.log("🚀 Activando Netlify Build Hook...");
+  
+          // Importamos fetch dinámicamente
+          const fetch = (await import("node-fetch")).default;
+  
+          await fetch(buildHookUrl, { method: "POST" });
+  
+          console.log("✅ Netlify Build Hook activado.");
+        } catch (error) {
+          console.error("❌ Error al activar el Build Hook:", error);
+        }
+      });
     });
-  });
-};
+  };
 
 //Server
 app.listen(3000, () => {
