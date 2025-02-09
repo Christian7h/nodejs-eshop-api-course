@@ -33,22 +33,6 @@ app.use(`${api}/users`, usersRoutes);
 app.use(`${api}/orders`, ordersRoutes);
 
 //Database
-// Conexión a la base de datos
-mongoose
-  .connect(process.env.CONNECTION_STRING, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    dbName: "eshop-database",
-  })
-  .then(() => {
-    console.log("✅ Database Connection is ready...");
-    watchDatabaseChanges(); // Llamamos a la función que detecta cambios
-  })
-  .catch((err) => {
-    console.log("❌ Database Connection Error:", err);
-  });
-
-// 📌 Función para detectar cambios en la BD
 const watchDatabaseChanges = () => {
     const db = mongoose.connection;
   
@@ -58,23 +42,35 @@ const watchDatabaseChanges = () => {
       const changeStream = db.watch();
   
       changeStream.on("change", async (change) => {
-        console.log("🔄 Cambio detectado en la BD:", change);
+        console.log("🔄 Cambio detectado en la BD:", JSON.stringify(change, null, 2));
   
         try {
           console.log("🚀 Activando Netlify Build Hook...");
   
-          // Importamos fetch dinámicamente
           const fetch = (await import("node-fetch")).default;
+          const response = await fetch(buildHookUrl, { method: "POST" });
   
-          await fetch(buildHookUrl, { method: "POST" });
-  
-          console.log("✅ Netlify Build Hook activado.");
+          console.log("✅ Netlify Build Hook activado, status:", response.status);
         } catch (error) {
           console.error("❌ Error al activar el Build Hook:", error);
         }
       });
     });
   };
+  
+// Conexión a la base de datos
+mongoose.connect(process.env.CONNECTION_STRING, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  }).then(() => {
+    console.log("✅ Database Connection is ready...");
+    watchDatabaseChanges(); // Asegurar que se ejecuta después de conectar
+  }).catch((err) => {
+    console.error("❌ Database Connection Error:", err);
+  });
+
+// 📌 Función para detectar cambios en la BD
+
 
 //Server
 app.listen(3000, () => {
