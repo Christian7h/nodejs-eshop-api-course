@@ -25,6 +25,7 @@ const usersRoutes = require('./routes/users');
 const ordersRoutes = require('./routes/orders');
 
 const api = process.env.API_URL;
+const buildHookUrl = "https://api.netlify.com/build_hooks/67a8d35f5c17bbf5381a1f2d"; // Reemplázalo con tu Build Hook real
 
 app.use(`${api}/categories`, categoriesRoutes);
 app.use(`${api}/products`, productsRoutes);
@@ -32,22 +33,50 @@ app.use(`${api}/users`, usersRoutes);
 app.use(`${api}/orders`, ordersRoutes);
 
 //Database
-mongoose.connect(process.env.CONNECTION_STRING, {
+// Conexión a la base de datos
+mongoose
+  .connect(process.env.CONNECTION_STRING, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    dbName: 'eshop-database'
-})
-.then(()=>{
-    console.log('Database Connection is ready...')
-})
-.catch((err)=> {
-    console.log(err);
-})
+    dbName: "eshop-database",
+  })
+  .then(() => {
+    console.log("✅ Database Connection is ready...");
+    watchDatabaseChanges(); // Llamamos a la función que detecta cambios
+  })
+  .catch((err) => {
+    console.log("❌ Database Connection Error:", err);
+  });
+
+// 📌 Función para detectar cambios en la BD
+const watchDatabaseChanges = () => {
+  const db = mongoose.connection;
+
+  db.once("open", () => {
+    console.log("🟢 Watching for database changes...");
+
+    // Escuchar cambios en todas las colecciones
+    const changeStream = db.watch();
+
+    changeStream.on("change", async (change) => {
+      console.log("🔄 Cambio detectado en la BD:", change);
+
+      // Llamamos al Build Hook de Netlify
+      try {
+        console.log("🚀 Activando Netlify Build Hook...");
+        await fetch(buildHookUrl, { method: "POST" });
+        console.log("✅ Netlify Build Hook activado.");
+      } catch (error) {
+        console.error("❌ Error al activar el Build Hook:", error);
+      }
+    });
+  });
+};
 
 //Server
-app.listen(3000, ()=>{
-
-    console.log('server is running http://localhost:3000');
-})
+app.listen(3000, () => {
+    console.log("🚀 Server is running on http://localhost:3000");
+  });
+  
 
 // module.exports.handler = serverless(app); // Exportamos app como handler
